@@ -1,10 +1,11 @@
 package BIOsocket;
 
-import java.io.BufferedOutputStream;
-import java.io.BufferedWriter;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.io.Writer;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Scanner;
@@ -14,40 +15,58 @@ import java.util.Scanner;
  * @time 2020-08-18-15:25
  * @description 功能描述
  */
-public class TestServerSocket {
-    ServerSocket serverSocket = null;
-    PrintWriter printWriter = null;
-    Scanner returnsc = null;
-    Scanner localsc = null;
-    {
-        try {
-            serverSocket = new ServerSocket(9999);
-            System.out.println("-----------------等待客户端连接-----------------");
-            Socket socket = serverSocket.accept();
-            System.out.println(socket.getInetAddress()+"已连接到服务器");
-            OutputStream out = socket.getOutputStream();
-            printWriter = new PrintWriter(out);
-            printWriter.write("已连接到远程服务器，可以开始说话了");
-            printWriter.flush();
-            localsc = new Scanner(System.in);
-            returnsc = new Scanner(socket.getInputStream());
-            while (returnsc.hasNextLine()){
-                String recvDate = returnsc.nextLine();
-                printWriter.write("客户端："+recvDate);
-                System.out.println("服务器：");
-                String sendDate = localsc.nextLine();
-                printWriter.write(sendDate);
-                printWriter.flush();
 
+public class TestServerSocket {
+    public static void main(String[] args) {
+       testServer();
+    }
+
+    public static void testServer(){
+        ServerSocket server = null;
+        Socket client = null;
+        BufferedReader reader = null;
+        PrintWriter printWriter = null;
+        Scanner scanner = new Scanner(System.in);
+        boolean end = false;
+        try {
+            server = new ServerSocket(9999);
+            System.out.println("服务器已启动，开始监听消息");
+            while (true){
+                client = server.accept();
+                reader = new BufferedReader(new InputStreamReader(client.getInputStream()));
+                String msg = null;
+                while ((msg = reader.readLine()) != null){
+                    System.out.println("客户端："+msg);
+                    if ("bye".equals(msg.trim().toLowerCase())){
+                        end = true;
+                        break;
+                    }
+                }
+                client.shutdownInput();
+                if (end){
+                    System.out.println("聊天结束");
+                    return;
+                }
+                System.out.println("服务器：");
+                String myMsg = scanner.nextLine();
+                printWriter = new PrintWriter(client.getOutputStream());
+                printWriter.write(myMsg);
+                printWriter.flush();
+                client.shutdownOutput();
+                if ("bye".equals(myMsg.trim().toLowerCase())){
+                    System.out.println("聊天结束");
+                    return;
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }finally {
+            scanner.close();
             printWriter.close();
-            localsc.close();
-            returnsc.close();
             try {
-                serverSocket.close();
+                reader.close();
+                server.close();
+                client.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
