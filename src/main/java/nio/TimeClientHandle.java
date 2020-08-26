@@ -23,7 +23,7 @@ public class TimeClientHandle implements Runnable {
     private boolean stop;
 
     public TimeClientHandle(String host,int port){
-        this.host = host;
+        this.host = host == null ? "127.0.0.1" : host;
         this.port = port;
         try {
             selector = Selector.open();
@@ -55,18 +55,21 @@ public class TimeClientHandle implements Runnable {
                     iterator.remove();
                     try {
                         handleInput(key);
-                    }catch (Exception e){
-                        if (key != null){
-                            key.cancel();
-                            if (key.channel() != null){
-                                key.channel().close();
-                            }
-                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        System.out.println(111);
                     }
                 }
             } catch (IOException e) {
                 e.printStackTrace();
                 System.exit(1);
+            }
+        }
+        if (selector != null){
+            try {
+                selector.close();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }
