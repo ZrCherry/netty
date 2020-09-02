@@ -38,6 +38,7 @@ public class MultiplexerTimeServer implements Runnable{
             System.out.println("The time server is start in port:"+port);
         } catch (IOException e) {
             e.printStackTrace();
+            System.exit(1);
         }
     }
 
@@ -77,7 +78,7 @@ public class MultiplexerTimeServer implements Runnable{
                 ServerSocketChannel ssc = (ServerSocketChannel)key.channel();
                 SocketChannel sc = ssc.accept();
                 sc.configureBlocking(false);
-                sc.register(selector,SelectionKey.OP_READ);
+                sc.register(this.selector,SelectionKey.OP_READ);
             }
             if (key.isReadable()){
                 SocketChannel sc = (SocketChannel) key.channel();
@@ -91,7 +92,7 @@ public class MultiplexerTimeServer implements Runnable{
                     String body = new String(bytes,"UTF-8");
                     System.out.println("The time server receive order:"+body);
                     String currentTime = "QUERY TIME ORDER".equalsIgnoreCase(body) ?
-                            new java.util.Date(System.currentTimeMillis()).toString(): "BAD ORDER";
+                            new java.util.Date(System.currentTimeMillis()).toString() : "BAD ORDER";
                     doWrite(sc,currentTime);
                 }else if (readBytes < 0){
                     //返回值小于0，链路已经关闭，释放资源

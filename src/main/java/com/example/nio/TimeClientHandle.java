@@ -56,8 +56,12 @@ public class TimeClientHandle implements Runnable {
                     try {
                         handleInput(key);
                     } catch (IOException e) {
-                        e.printStackTrace();
-                        System.out.println(111);
+                        if (key != null){
+                            key.cancel();
+                            if (key.channel() != null){
+                                key.channel().close();
+                            }
+                        }
                     }
                 }
             } catch (IOException e) {
@@ -75,31 +79,32 @@ public class TimeClientHandle implements Runnable {
     }
 
     private void handleInput(SelectionKey key) throws IOException{
+        //是否连接成功
         if (key.isValid()){
             SocketChannel sc = (SocketChannel)key.channel();
-            if (key.isConnectable()){
-                if (sc.finishConnect()){
-                    sc.register(selector,SelectionKey.OP_READ);
+            if (key.isConnectable()) {
+                if (sc.finishConnect()) {
+                    sc.register(selector, SelectionKey.OP_READ);
                     doWrite(sc);
-                }else{
+                } else {
                     System.exit(1);
                 }
-                if (key.isReadable()){
-                    ByteBuffer readBuffer = ByteBuffer.allocate(1024);
-                    int readBytes = sc.read(readBuffer);
-                    if (readBytes > 0){
-                        readBuffer.flip();
-                        byte[] bytes = new byte[readBuffer.remaining()];
-                        readBuffer.get(bytes);
-                        String body = new String(bytes,"utf-8");
-                        System.out.println("now is : "+body);
-                        this.stop = true;
-                    }else if (readBytes < 0){
-                        key.cancel();
-                        sc.close();
-                    }else{
-                        ;
-                    }
+            }
+            if (key.isReadable()){
+                ByteBuffer readBuffer = ByteBuffer.allocate(1024);
+                int readBytes = sc.read(readBuffer);
+                if (readBytes > 0){
+                    readBuffer.flip();
+                    byte[] bytes = new byte[readBuffer.remaining()];
+                    readBuffer.get(bytes);
+                    String body = new String(bytes,"utf-8");
+                    System.out.println("now is : "+body);
+                    this.stop = true;
+                }else if (readBytes < 0){
+                    key.cancel();
+                    sc.close();
+                }else{
+                    ;
                 }
             }
         }
