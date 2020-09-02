@@ -1,11 +1,11 @@
-package nio;
+package com.example.nio;
 
 /**
  * @Author zhangrui
- * @time 2020-08-19-19:58
- * @description NIO时间服务器
+ * @time 2020-08-24-20:10
+ * @description NIO时间客户端
  */
-public class TimeServer {
+public class TimeClient {
     public static void main(String[] args) {
         int port = 8080;
         if (args != null && args.length > 0){
@@ -15,7 +15,7 @@ public class TimeServer {
                 //采用默认值
             }
         }
-        MultiplexerTimeServer timeServer = new MultiplexerTimeServer(port);
-        new Thread(timeServer,"NIO-MultiplexerTimeServer").start();
+
+        new Thread(new TimeClientHandle("127.0.0.1",port),"TimeClient-001").start();
     }
 }
